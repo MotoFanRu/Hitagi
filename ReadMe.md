@@ -5,7 +5,7 @@ Custom RAMDLD implementation for Motorola P2K phones on Neptune LTE originally w
 
 ## Build
 
-```
+```bash
 sudo apt install gcc-arm-none-eabi
 
 cd LTE-Hitagi
@@ -16,7 +16,7 @@ make
 
 Please use the **Flash Terminal** utility: **[https://github.com/EXL/FlashTerminal](https://github.com/EXL/FlashTerminal)**
 
-```
+```bash
 cd FlashTerminal
 sudo ./FlashTerminal.py -v -l
 ```
