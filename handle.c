@@ -26,6 +26,34 @@ void handle_echo(char *arg) {
   usb_write_ep2( (unsigned short*)arg, strlen(arg));
 }
 
+// Function to convert a hex string to an integer
+unsigned int hexStringToInt(const char *hexString) {
+    unsigned int result = 0;
+    while (*hexString) {
+        char c = *hexString;
+        int value;
+
+        // Convert a single hex character to its integer value
+        if (c >= '0' && c <= '9') {
+            value = c - '0';
+        } else if (c >= 'A' && c <= 'F') {
+            value = c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'f') {
+            value = c - 'a' + 10;
+        } else {
+            return 0; // Return 0 for invalid input
+        }
+
+        // Combine the value into the result
+        result = (result << 4) | value;
+        hexString++;
+    }
+    return result;
+}
+
+void handle_dump(char *arg) {
+    dump(hexStringToInt(arg), 0x800);
+}
 
 void handle_ramldr() {
   ramldr_start();

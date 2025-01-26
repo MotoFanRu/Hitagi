@@ -19,7 +19,7 @@ void make_table() {
   moto_table[1] = (struct COMMAND_NAME){ "HLP", handle_ack };
   moto_table[2] = (struct COMMAND_NAME){ "ECHO", handle_echo };
   moto_table[3] = (struct COMMAND_NAME){ "RAMLDR", handle_ramldr };
-
+  moto_table[4] = (struct COMMAND_NAME){ "DUMP", handle_dump };
 }
 
 void parse_moto_cmd(unsigned char *in, short len) {
