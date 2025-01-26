@@ -1,4 +1,4 @@
-#define MAX_CHUNK 8
+#define MAX_CHUNK 0x10
 
 void dump(int addr, int size) {
 

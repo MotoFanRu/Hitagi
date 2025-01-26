@@ -1,6 +1,6 @@
 
-CFLAGS=-nostdinc -pie -mbig-endian -march=armv4t -mtune=arm7tdmi-s -O0 -Wall -Wno-implicit-function-declaration
-CFLAGS+=-fno-builtin
+CFLAGS =-nostdinc -pie -mbig-endian -march=armv4t -mtune=arm7tdmi-s -O0
+CFLAGS+=-Wall -Wno-implicit-function-declaration -fno-builtin
 
 SOURCES=start.c string.c memcpy.c parse.c handle.c usb.c dump.c nor.c watchdog.c
 OBJECTS=$(SOURCES:.c=.o)

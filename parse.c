@@ -33,7 +33,7 @@ void parse_moto_cmd(unsigned char *in, short len) {
   memset(cmd, 0, 10);
   memset(arg, 0, 20);
 
-  while (len--) {
+  while (_len--) {
     switch(*(in+fragment_len)) {
       case ETX:
       case RS:
