@@ -1,0 +1,26 @@
+
+CFLAGS =-DFTR_LTE2 -nostdinc -pie -mbig-endian -march=armv4t -mtune=arm7tdmi-s -O0
+CFLAGS+=-Wall -Wno-implicit-function-declaration -fno-builtin
+
+SOURCES=start.c string.c memcpy.c parse.c handle.c usb.c dump.c nor.c watchdog.c
+OBJECTS=$(SOURCES:.c=.o)
+
+NAME=LTE2-Hitagi
+BINARY=$(NAME).tmp
+ELF=$(NAME).elf
+LDR=$(NAME).ldr
+
+all: $(BINARY)
+
+.c.o:
+	arm-none-eabi-gcc $(CFLAGS) -o $@ -c $<
+
+$(ELF): $(OBJECTS)
+	arm-none-eabi-ld --script lte2.lds $(OBJECTS) -o $@
+
+$(BINARY): $(ELF)
+	arm-none-eabi-objcopy -O binary $< $@
+	python3 lte2_postlink.py lte2_head.bin $(BINARY) lte2_sign.bin $(LDR)
+
+clean:
+	rm -f $(BINARY) $(ELF) $(OBJECTS) $(LDR)

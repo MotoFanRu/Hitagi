@@ -1,7 +1,7 @@
 LTE Hitagi
 ==========
 
-Custom RAMDLD implementation for Motorola P2K phones on Neptune LTE originally written from scratch by **[@muromec](https://github.com/muromec)**, fork of the **[https://github.com/muromec/lte-hitagi](https://github.com/muromec/lte-hitagi)** repository.
+Custom RAMDLD implementation for Motorola P2K phones on Neptune LTE/LTE2 originally written from scratch by **[@muromec](https://github.com/muromec)**, fork of the **[https://github.com/muromec/lte-hitagi](https://github.com/muromec/lte-hitagi)** repository.
 
 ## Build
 

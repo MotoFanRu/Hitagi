@@ -1,5 +1,8 @@
-
-void (*ramldr_start)() = (void*)0x3fd0010;
+#if defined(FTR_LTE)
+void (*ramldr_start)() = (void*)0x03FD0010;
+#elif defined(FTR_LTE2)
+void (*ramldr_start)() = (void*)0x03FC8014;
+#endif
 
 char _hlo[] = "BE @ LE\0";
 short _hlo_len = 8;
