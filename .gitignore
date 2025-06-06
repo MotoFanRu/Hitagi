@@ -1,6 +1,5 @@
 *.o
 *.obj
+*.tmp
 *.elf
-*.bin
 *.ldr
-simula/simula
