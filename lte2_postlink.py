@@ -20,7 +20,7 @@ def main(head_path, loader_path, sign_path, output_path):
 	combined = head_data + loader_data
 
 	# Step 3: Prepare output buffer filled with FFs up to offset 0x1F800
-	SIGN_OFFSET = 0x1F800
+	SIGN_OFFSET = 0x1AB0
 	if len(combined) > SIGN_OFFSET:
 		raise ValueError(f'Combined size ({len(combined)}) is greater than sign offset ({SIGN_OFFSET})')
 	# Pad with 0xFF up to SIGN_OFFSET
