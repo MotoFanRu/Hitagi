@@ -1,14 +1,9 @@
 /*
- * Project:
- *   EP1, EG1: ElfPack 1.x by Andy51 for Motorola P2K phones.
- *
  * About:
  *   Linker script for Motorola P2K phones on the Neptune LTE SoC, including a memory map.
- *   The PATCH/ORIGIN start address must be replaced with a valid one.
- *   Supports models: Motorola E398, Motorola ROKR E1, Motorola RAZR V3, etc.
  *
  * Author:
- *   EXL, 29-Dec-2024
+ *   EXL, 10-Jun-2025
  */
 
 MEMORY {
@@ -28,7 +23,6 @@ OUTPUT_FORMAT("elf32-bigarm")
 ENTRY(_start)
 
 /* Combine all relevant section to one. */
-
 SECTIONS {
 	.text : {
 		*(.startup .startup.*)
