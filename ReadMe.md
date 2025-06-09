@@ -1,14 +1,14 @@
-LTE Hitagi
-==========
+Hitagi
+======
 
-Custom RAMDLD implementation for Motorola P2K phones on Neptune LTE/LTE2 originally written from scratch by **[@muromec](https://github.com/muromec)**, fork of the **[https://github.com/muromec/lte-hitagi](https://github.com/muromec/lte-hitagi)** repository.
+Custom and open-source RAMDLD (Motorola Flash Protocol) implementation for Motorola P2K phones.
 
 ## Build
 
 ```bash
-sudo apt install gcc-arm-none-eabi
+sudo apt install -y gcc-arm-none-eabi
 
-cd LTE-Hitagi
+cd Hitagi
 make
 ```
 
@@ -21,9 +21,13 @@ cd FlashTerminal
 sudo ./FlashTerminal.py -v -l
 ```
 
-## Additional information
+## Credits & Thanks
 
-* [With a sledgehammer and a laptop](https://ezxdev.blogspot.com/2010/03/blog-post.html)
-* [Neptune LTE, IROM, USB](https://ezxdev.blogspot.com/2010/04/usb.html)
-
-Thanks to **[@muromec](https://github.com/muromec)**
+* **[@muromec](https://github.com/muromec)**
+* **[@EXL](https://github.com/EXL)**
+* **[@Siesta](https://github.com/Siesta)** aka fkcoder, LAVMEN
+* **[@Vilko](https://github.com/Vilko)**
+* GanjaFuzz
+* KAMTOS
+* P2K Easy Tool authors
+* MotoFan.Ru developers
