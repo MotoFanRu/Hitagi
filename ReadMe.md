@@ -1,7 +1,7 @@
 Hitagi
 ======
 
-Custom and open-source RAMDLD (Motorola Flash Protocol) implementation for Motorola P2K phones.
+Custom and open-source RAMDLD (Motorola Flash Protocol) implementation for Motorola phones.
 
 ## Build
 
