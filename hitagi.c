@@ -15,6 +15,15 @@ static int util_string_equal(const u8 *str1_ptr, const u8 *str2_ptr);
 static int util_map_cmd(const HITAGI_CMD_TABLE_T *table_ptr, u8 table_size, const u8 *cmd);
 
 static int flash_init(void);
+static void flash_nop(u8 nop_count);
+static void flash_wait(volatile u16 *reg_addr_ctl);
+static void flash_switch_to_read_and_clean_regs(volatile u16 *reg_addr_ctl);
+static void flash_unlock(volatile u16 *reg_addr_ctl);
+static void flash_erase(volatile u16 *reg_addr_ctl);
+static void flash_write_word(volatile u16 *reg_addr_ctl, u16 word);
+static void flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size);
+static void flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size);
+static int flash_geometry(volatile u16 *reg_addr_ctl);
 
 static void usb_copy_block(const u8 *src, u16 *dst, u8 len);
 static int usb_tx(const u8 *src, u8 len);
@@ -77,6 +86,8 @@ static u8 rx_command[MAX_COMMAND_STR_SIZE];
 
 static u8 rx_data[USB_MAX_RX_DATA_SIZE];
 static u8 tx_data[USB_MAX_TX_DATA_SIZE];
+
+static HITAGI_ERASE_CMDLET_T erase_cmdlet;
 
 /**
  * Util functions.
@@ -145,7 +156,125 @@ static int util_map_cmd(const HITAGI_CMD_TABLE_T *table_ptr, u8 table_size, cons
  */
 
 static int flash_init(void) {
+	erase_cmdlet = ERASE_NO;
+
+	flash_switch_to_read_and_clean_regs(FLASH_START_ADDRESS);
+
 	return RESULT_OK;
+}
+
+static void flash_nop(u8 nop_count) {
+	u8 i;
+	for (i = 0; i < nop_count; ++i) {
+		asm volatile ("nop");
+	}
+}
+
+static void flash_wait(volatile u16 *reg_addr_ctl) {
+	while ((*reg_addr_ctl & FLASH_STATUS_READY) != FLASH_STATUS_READY) {
+		flash_nop(8);
+	}
+}
+
+static void flash_switch_to_read_and_clean_regs(volatile u16 *reg_addr_ctl) {
+	*reg_addr_ctl = FLASH_COMMAND_CLEAR;
+
+	flash_nop(12);
+
+	*reg_addr_ctl = FLASH_COMMAND_READ;
+
+	flash_nop(12);
+}
+
+static void flash_unlock(volatile u16 *reg_addr_ctl) {
+	*reg_addr_ctl = FLASH_COMMAND_LOCK;
+	flash_nop(12);
+
+	*reg_addr_ctl = FLASH_COMMAND_CONFIRM;
+	flash_nop(12);
+}
+
+static void flash_erase(volatile u16 *reg_addr_ctl) {
+	*reg_addr_ctl = FLASH_COMMAND_ERASE;
+	flash_nop(12);
+
+	*reg_addr_ctl = FLASH_COMMAND_CONFIRM;
+	flash_nop(12);
+
+	flash_wait(reg_addr_ctl);
+}
+
+static void flash_write_word(volatile u16 *reg_addr_ctl, u16 word) {
+	*reg_addr_ctl = FLASH_COMMAND_WRITE;
+
+	flash_nop(12);
+
+	*reg_addr_ctl = word;
+}
+
+static void flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
+	u16 src_data;
+	u32 size_index;
+
+	src_data = *buffer;
+	size_index = size;
+
+	do
+	{
+		*reg_addr_ctl = FLASH_COMMAND_WRITE_BUFFER;
+	} while ((*reg_addr_ctl & FLASH_STATUS_READY) != FLASH_STATUS_READY);
+
+	*reg_addr_ctl = BUFFER_SIZE_TO_WRITE(size_index);
+
+	while (size_index > 0) {
+		*reg_addr_ctl = src_data;
+		reg_addr_ctl++;
+		buffer++;
+		src_data = *buffer;
+		size_index--;
+
+		watchdog_service();
+	}
+
+	reg_addr_ctl--;
+
+	*reg_addr_ctl = FLASH_COMMAND_CONFIRM;
+}
+
+static void flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size) {
+	volatile u16 *src = buffer;
+	volatile u16 *dst = reg_addr_ctl;
+	volatile u16 *end = dst + (size / 2);
+
+	while (dst < end) {
+		u16 word = *src;
+		if (word != 0xFFFF) {
+			flash_write_word(dst, word);
+			flash_wait(dst);
+			watchdog_service();
+		}
+		dst++;
+		src++;
+	}
+}
+
+static int flash_geometry(volatile u16 *reg_addr_ctl) {
+	u32 block_size;
+	u32 addr = (u32) reg_addr_ctl;
+
+	if ((addr >= ((u32) FLASH_START_UNSAFE_DATA)) && (addr < ((u32) FLASH_END_UNSAFE_DATA))) {
+		if (erase_cmdlet == ERASE_AND_WRITE_SAFE) {
+			return RESULT_FAIL;
+		}
+	}
+
+	if ((addr >= ((u32) FLASH_START_PARAMETER_BLOCKS)) && (addr < ((u32) FLASH_END_PARAMETER_BLOCKS))) {
+		block_size = 0x8000;
+	} else {
+		block_size = 0x20000;
+	}
+
+	return (addr % block_size);
 }
 
 /**
@@ -357,10 +486,34 @@ static void hitagi_command_BIN(const u8 *data_ptr, const u8 *buffer_next_byte) {
 		buffer_next_byte += nr_shift_right;
 	}
 
-	/* Copy to RAM. */
-	data_aligned_ptr = (u8 *) received_address_ptr;
-	for (i = 0; i < received_packet_size; ++i) {
-		*data_aligned_ptr++ = *source_ptr++;
+	if (erase_cmdlet == ERASE_NO) {
+		/* Copy to RAM. */
+		data_aligned_ptr = (u8 *) received_address_ptr;
+		for (i = 0; i < received_packet_size; ++i) {
+			*data_aligned_ptr++ = *source_ptr++;
+		}
+	} else {
+		flash_unlock((volatile u16 *) received_address_ptr);
+
+		if (flash_geometry((volatile u16 *) received_address_ptr) == RESULT_OK) {
+			flash_erase((volatile u16 *) received_address_ptr);
+		}
+
+		if (erase_cmdlet != ERASE_ONLY) {
+			if (erase_cmdlet == ERASE_WRITE_BUFFER) {
+				flash_write_buffer(
+					(volatile u16 *) received_address_ptr,
+					(const u16 *) source_ptr,
+					received_packet_size
+				);
+			} else {
+				flash_write_block(
+					(volatile u16 *) received_address_ptr,
+					(volatile u16 *) source_ptr,
+					received_packet_size
+				);
+			}
+		}
 	}
 
 	/*
@@ -372,8 +525,17 @@ static void hitagi_command_BIN(const u8 *data_ptr, const u8 *buffer_next_byte) {
 }
 
 static void hitagi_command_ERASE(const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u8 response[MAX_READ_RESPONSE_SIZE];
+
 	UNUSED(data_ptr);
 	UNUSED(buffer_next_byte);
+
+	erase_cmdlet += 1;
+
+	/* Comment out for compatibility with Motorola Flash Protocol. */
+	util_u16_to_hexasc(erase_cmdlet, response);
+
+	hitagi_send_ack(response);
 }
 
 static void hitagi_command_READ(const u8 *data_ptr, const u8 *buffer_next_byte) {
@@ -791,7 +953,7 @@ void hitagi_start(void) {
 }
 
 void __attribute__((naked, section(".startup"))) _start(void) {
-	__asm__ __volatile__ (
+	asm volatile (
 		"bl hitagi_start\n"
 		"b .\n"
 	);

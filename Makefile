@@ -27,7 +27,7 @@ CFLAGS += -nostdlib -nostdinc
 CFLAGS += -O2 -marm -mbig-endian -march=armv4t -mtune=arm7tdmi-s
 CFLAGS += -ffreestanding -fPIE
 LDFLAGS = -pie -nostdlib
-LIBS    = -T hitagi.ld 
+LIBS    = -T hitagi.ld -L. -lgcc_gba_m
 
 .PHONY: all clean
 
@@ -39,7 +39,7 @@ $(BIN): $(ELF)
 	$(OBJDUMP) -d $(ELF)
 
 $(ELF): $(OBJS) hitagi.ld
-	$(CC) $(LDFLAGS) $(LIBS) -o $@ $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
