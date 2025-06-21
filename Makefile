@@ -27,7 +27,7 @@ CFLAGS += -nostdlib -nostdinc
 CFLAGS += -O2 -marm -mbig-endian -march=armv4t -mtune=arm7tdmi-s
 CFLAGS += -ffreestanding -fPIE
 LDFLAGS = -pie -nostdlib
-LIBS    = -T hitagi.ld -L. -lgcc_gba_m
+LIBS    = -T hitagi.ld
 
 .PHONY: all clean
 

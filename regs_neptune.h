@@ -224,10 +224,9 @@
 #endif
 
 #define FLASH_START_ADDRESS            ((volatile u16 *) 0x10000000)
+
 #define FLASH_START_PARAMETER_BLOCKS   ((volatile u16 *) 0x10000000)
 #define FLASH_END_PARAMETER_BLOCKS     ((volatile u16 *) 0x10020000)
-#define FLASH_START_UNSAFE_DATA        ((volatile u16 *) 0x10000000)
-#define FLASH_END_UNSAFE_DATA          ((volatile u16 *) 0x10040000)
 
 #if defined(FTR_FLASH_DATA_WIDTH_32BIT)
 	#define FLASH_COMMAND(x) (((FLASH_DATA_WIDTH) (x) | ((FLASH_DATA_WIDTH) (x) << (sizeof(FLASH_DATA_WIDTH) << 2)))
