@@ -213,37 +213,4 @@
 
 #define USB_DATA_ARRAY_SIZE (32)
 
-/**
- * Flash section.
- */
-
-#if defined(FTR_FLASH_DATA_WIDTH_32BIT)
-	typedef u32 FLASH_DATA_WIDTH;
-#else
-	typedef u16 FLASH_DATA_WIDTH;
-#endif
-
-#define FLASH_START_ADDRESS            ((volatile u16 *) 0x10000000)
-
-#define FLASH_START_PARAMETER_BLOCKS   ((volatile u16 *) 0x10000000)
-#define FLASH_END_PARAMETER_BLOCKS     ((volatile u16 *) 0x10020000)
-
-#if defined(FTR_FLASH_DATA_WIDTH_32BIT)
-	#define FLASH_COMMAND(x) (((FLASH_DATA_WIDTH) (x) | ((FLASH_DATA_WIDTH) (x) << (sizeof(FLASH_DATA_WIDTH) << 2)))
-#else
-	#define FLASH_COMMAND(x) ((FLASH_DATA_WIDTH) (x))
-#endif
-
-#define BUFFER_SIZE_TO_WRITE(s)      FLASH_COMMAND((s) - 1)
-
-#define FLASH_COMMAND_ERASE          FLASH_COMMAND(0x20)
-#define FLASH_COMMAND_WRITE          FLASH_COMMAND(0x40)
-#define FLASH_COMMAND_CLEAR          FLASH_COMMAND(0x50)
-#define FLASH_COMMAND_LOCK           FLASH_COMMAND(0x60)
-#define FLASH_STATUS_READY           FLASH_COMMAND(0x80)
-#define FLASH_COMMAND_WRITE_PROTECT  FLASH_COMMAND(0xC0)
-#define FLASH_COMMAND_CONFIRM        FLASH_COMMAND(0xD0)
-#define FLASH_COMMAND_WRITE_BUFFER   FLASH_COMMAND(0xE8)
-#define FLASH_COMMAND_READ           FLASH_COMMAND(0xFF)
-
 #endif /* !REG_NEPTUNE_H */

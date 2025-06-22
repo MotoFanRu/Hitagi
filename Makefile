@@ -11,8 +11,9 @@ OBJDUMP := $(CROSS_COMPILE)objdump
 SIZE    := $(CROSS_COMPILE)size
 
 # Source and objects
-SRCS = hitagi.c
-OBJS = $(SRCS:.c=.o)
+SRCS  = hitagi.c
+SRCS += flash_intel16.c
+OBJS  = $(SRCS:.c=.o)
 
 # Output files
 TARGET = hitagi
@@ -21,9 +22,9 @@ BIN    = $(TARGET).ldr
 
 # Flags
 DEFINES = -DFTR_NEPTUNE_LTE1
-CFLAGS  = $(DEFINES) 
-CFLAGS += -Wall -Wextra -pedantic 
-CFLAGS += -nostdlib -nostdinc 
+CFLAGS  = $(DEFINES)
+CFLAGS += -Wall -Wextra -pedantic
+CFLAGS += -nostdlib -nostdinc
 CFLAGS += -O2 -marm -mbig-endian -march=armv4t -mtune=arm7tdmi-s
 CFLAGS += -ffreestanding -fPIE
 LDFLAGS = -pie -nostdlib

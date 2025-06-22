@@ -81,4 +81,12 @@ typedef enum {
 	ERASE_ONLY
 } HITAGI_CMDLET_ERASE_T;
 
+extern HITAGI_CMDLET_ERASE_T erase_cmdlet;
+
+/**
+ * Functions.
+ */
+
+extern int watchdog_service(void);
+
 #endif /* !PLATFORM_H */
