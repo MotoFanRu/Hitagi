@@ -178,7 +178,6 @@ static void flash_wait(volatile u16 *reg_addr_ctl) {
 
 static void flash_switch_to_read_and_clean_regs(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_COMMAND_CLEAR;
-
 	flash_nop(12);
 
 	*reg_addr_ctl = FLASH_COMMAND_READ;
@@ -205,7 +204,6 @@ static void flash_erase(volatile u16 *reg_addr_ctl) {
 
 static void flash_write_word(volatile u16 *reg_addr_ctl, u16 word) {
 	*reg_addr_ctl = FLASH_COMMAND_WRITE;
-
 	flash_nop(12);
 
 	*reg_addr_ctl = word;
@@ -232,6 +230,7 @@ static void flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, 
 }
 
 static void flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
+	u16 i;
 	u32 length;
 	u32 size_index;
 	volatile u16 *src = (volatile u16 *) buffer;
@@ -253,8 +252,11 @@ static void flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u3
 
 		*dst = BUFFER_SIZE_TO_WRITE(length);
 
-		while(length--) {
-			*dst++ = *src++;
+		for (i = 0; i < length; ++i) {
+			*dst = *src;
+
+			dst++;
+			src++;
 		}
 
 		*reg_addr_ctl = FLASH_COMMAND_CONFIRM;
