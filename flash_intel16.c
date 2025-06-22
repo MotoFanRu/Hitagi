@@ -1,8 +1,11 @@
-#include "platform.h"
 #include "flash.h"
 
 /**
- * Intel Flash chips.
+ * Intel-like (Intel, ST, Numonyx, etc.) flash chips with 16-bit width bus driver.
+ *
+ * Documentation:
+ *  StrataFlash_Wireless_Memory_(L30).pdf
+ *  https://firmware.center/firmware/Motorola/E398%20%28Polo%29/Service%20Docs/Data%20Sheets/U700_Numonyx_StrataFlash_Wireless_Memory_%28L30%29.pdf
  */
 
 #define FLASH_INTEL_START_PARAMETER_BLOCKS   ((volatile FLASH_DATA_WIDTH *) 0x10000000)

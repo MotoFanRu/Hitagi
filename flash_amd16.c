@@ -1,8 +1,11 @@
-#include "platform.h"
 #include "flash.h"
 
 /**
- * AMD Flash chips with 16-bit width bus.
+ * AMD-like (AMD, Fujitsu, Spansion) flash chips with 16-bit width bus driver.
+ *
+ * Documentation:
+ *  S71WS-NX0.PDF
+ *  https://forum.motofan.ru/index.php?act=Attach&type=post&id=280636
  */
 
 #define FLASH_AMD_START_PARAMETER_BLOCKS_1    ((volatile FLASH_DATA_WIDTH *) 0x10000000)
