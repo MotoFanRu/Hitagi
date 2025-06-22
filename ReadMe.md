@@ -10,6 +10,9 @@ sudo apt install -y gcc-arm-none-eabi
 
 cd Hitagi
 make
+
+make FLASH_TYPE=intel16
+make FLASH_TYPE=amd16
 ```
 
 ## Run
