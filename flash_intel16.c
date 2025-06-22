@@ -1,6 +1,30 @@
 #include "platform.h"
 #include "flash.h"
 
+/**
+ * Intel Flash chips.
+ */
+
+#define FLASH_INTEL_START_PARAMETER_BLOCKS   ((volatile FLASH_DATA_WIDTH *) 0x10000000)
+#define FLASH_INTEL_END_PARAMETER_BLOCKS     ((volatile FLASH_DATA_WIDTH *) 0x10020000)
+
+#define FLASH_INTEL_COMMAND_ERASE          FLASH_COMMAND(0x20)
+#define FLASH_INTEL_COMMAND_WRITE          FLASH_COMMAND(0x40)
+#define FLASH_INTEL_COMMAND_CLEAR          FLASH_COMMAND(0x50)
+#define FLASH_INTEL_COMMAND_LOCK           FLASH_COMMAND(0x60)
+#define FLASH_INTEL_STATUS_READY           FLASH_COMMAND(0x80)
+#define FLASH_INTEL_COMMAND_WRITE_PROTECT  FLASH_COMMAND(0xC0)
+#define FLASH_INTEL_COMMAND_CONFIRM        FLASH_COMMAND(0xD0)
+#define FLASH_INTEL_COMMAND_WRITE_BUFFER   FLASH_COMMAND(0xE8)
+#define FLASH_INTEL_COMMAND_READ           FLASH_COMMAND(0xFF)
+
+/**
+ * Functions.
+ */
+
+static void flash_nop(u8 nop_count);
+static void flash_wait(volatile u16 *reg_addr_ctl);
+static void flash_reset(volatile u16 *reg_addr_ctl);
 
 /**
  * Flash section for the Intel based flash chips.
@@ -9,25 +33,25 @@
 int flash_init(void) {
 	erase_cmdlet = ERASE_NO;
 
-	flash_switch_to_read_and_clean_regs(FLASH_START_ADDRESS);
+	flash_reset(FLASH_START_ADDRESS);
 
 	return RESULT_OK;
 }
 
-void flash_nop(u8 nop_count) {
+static void flash_nop(u8 nop_count) {
 	u8 i;
 	for (i = 0; i < nop_count; ++i) {
 		asm volatile ("nop");
 	}
 }
 
-void flash_wait(volatile u16 *reg_addr_ctl) {
+static void flash_wait(volatile u16 *reg_addr_ctl) {
 	while ((*reg_addr_ctl & FLASH_INTEL_STATUS_READY) != FLASH_INTEL_STATUS_READY) {
 		flash_nop(8);
 	}
 }
 
-void flash_switch_to_read_and_clean_regs(volatile u16 *reg_addr_ctl) {
+static void flash_reset(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_CLEAR;
 	flash_nop(12);
 
@@ -35,15 +59,17 @@ void flash_switch_to_read_and_clean_regs(volatile u16 *reg_addr_ctl) {
 	flash_nop(12);
 }
 
-void flash_unlock(volatile u16 *reg_addr_ctl) {
+int flash_unlock(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_LOCK;
 	flash_nop(12);
 
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_CONFIRM;
 	flash_nop(12);
+
+	return RESULT_OK;
 }
 
-void flash_erase(volatile u16 *reg_addr_ctl) {
+int flash_erase(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_ERASE;
 	flash_nop(12);
 
@@ -51,17 +77,11 @@ void flash_erase(volatile u16 *reg_addr_ctl) {
 	flash_nop(12);
 
 	flash_wait(reg_addr_ctl);
+
+	return RESULT_OK;
 }
 
-void flash_write_word(volatile u16 *reg_addr_ctl, u16 word) {
-	*reg_addr_ctl = FLASH_INTEL_COMMAND_WRITE;
-	flash_nop(12);
-
-	*reg_addr_ctl = word;
-	flash_nop(12);
-}
-
-void flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size) {
+int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size) {
 	volatile u16 *src = buffer;
 	volatile u16 *dst = reg_addr_ctl;
 	volatile u16 *end = dst + (size / 2);
@@ -69,7 +89,14 @@ void flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 siz
 	while (dst < end) {
 		u16 word = *src;
 		if (word != 0xFFFF) {
-			flash_write_word(dst, word);
+			/* Write word seq. */
+			*dst = FLASH_INTEL_COMMAND_WRITE;
+			flash_nop(12);
+
+			*dst = word;
+			flash_nop(12);
+
+			/* Wait Loops. */
 			flash_wait(dst);
 			watchdog_service();
 		}
@@ -77,10 +104,12 @@ void flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 siz
 		src++;
 	}
 
-	flash_switch_to_read_and_clean_regs(dst);
+	flash_reset(reg_addr_ctl);
+
+	return RESULT_OK;
 }
 
-void flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
+int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
 	u16 i;
 	u32 length;
 	u32 size_index;
@@ -119,7 +148,9 @@ void flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size)
 		size_index -= length;
 	} while (size_index > 0);
 
-	flash_switch_to_read_and_clean_regs(reg_addr_ctl);
+	flash_reset(reg_addr_ctl);
+
+	return RESULT_OK;
 }
 
 int flash_geometry(volatile u16 *reg_addr_ctl) {

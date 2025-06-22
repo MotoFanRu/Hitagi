@@ -10,9 +10,11 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 OBJDUMP := $(CROSS_COMPILE)objdump
 SIZE    := $(CROSS_COMPILE)size
 
+FLASH_TYPE ?= intel16
+
 # Source and objects
 SRCS  = hitagi.c
-SRCS += flash_intel16.c
+SRCS += flash_$(FLASH_TYPE).c
 OBJS  = $(SRCS:.c=.o)
 
 # Output files
@@ -36,8 +38,10 @@ all: $(BIN)
 
 $(BIN): $(ELF)
 	$(OBJCOPY) -O binary $< $@
-	$(SIZE) $(ELF)
 	$(OBJDUMP) -d $(ELF)
+	$(SIZE) $(ELF)
+	chmod -x $@
+	stat $@
 
 $(ELF): $(OBJS) hitagi.ld
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
