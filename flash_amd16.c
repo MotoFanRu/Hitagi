@@ -176,6 +176,7 @@ int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) 
 		flash_nop(16);
 		watchdog_service();
 
+#if 0
 		/* Finalization. */
 		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
 		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
@@ -183,6 +184,7 @@ int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) 
 		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_RESET_WRITE_BUF;
 
 		flash_reset(reg_addr_ctl);
+#endif
 
 		size_index -= length;
 	} while (size_index > 0);

@@ -59,3 +59,4 @@ sudo ./FlashTerminal.py -v -l
 * MotoFan.Ru developers
 * Motorola developers and engineers
 * Intel and AMD engineers and other
+* DenK for testing Spansion memory chip flashing on Siemens CC75
