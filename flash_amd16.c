@@ -127,6 +127,7 @@ int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size
 
 			*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_SETUP_WRITE;
 
+			flash_nop(12);
 			*dst = word;
 
 			/* Wait Loops. */
@@ -146,6 +147,7 @@ int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size
 	return RESULT_OK;
 }
 
+/* EXL, 25-Jun-2025: Looks like this one works only with 0x40 usb write buffer size in the Flash Terminal. */
 int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
 	u16 i;
 	u32 length;
