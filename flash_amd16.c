@@ -64,6 +64,8 @@ static int flash_wait(volatile u16 *reg_addr_ctl, const u16 data) {
 		word = *reg_addr_ctl;
 	}
 
+	word = *reg_addr_ctl;
+
 	flash_nop(12);
 
 	return (word != data) ? word : RESULT_OK;
