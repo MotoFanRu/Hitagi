@@ -125,11 +125,11 @@ int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size
 
 			*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_SETUP_WRITE;
 
-			*reg_addr_ctl = word;
+			*dst = word;
 
 			/* Wait Loops. */
-			status = flash_wait(reg_addr_ctl, word);
 			watchdog_service();
+			status = flash_wait(dst, word);
 			if (status != RESULT_OK) {
 				flash_reset(reg_addr_ctl);
 				return status;
