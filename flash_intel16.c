@@ -11,11 +11,13 @@
 #define FLASH_INTEL_START_PARAMETER_BLOCKS   ((volatile FLASH_DATA_WIDTH *) 0x10000000)
 #define FLASH_INTEL_END_PARAMETER_BLOCKS     ((volatile FLASH_DATA_WIDTH *) 0x10020000)
 
+#define FLASH_INTEL_STATUS_READY           FLASH_COMMAND(0x80)
+
 #define FLASH_INTEL_COMMAND_ERASE          FLASH_COMMAND(0x20)
 #define FLASH_INTEL_COMMAND_WRITE          FLASH_COMMAND(0x40)
 #define FLASH_INTEL_COMMAND_CLEAR          FLASH_COMMAND(0x50)
 #define FLASH_INTEL_COMMAND_LOCK           FLASH_COMMAND(0x60)
-#define FLASH_INTEL_STATUS_READY           FLASH_COMMAND(0x80)
+#define FLASH_INTEL_COMMAND_PART_ID        FLASH_COMMAND(0x90)
 #define FLASH_INTEL_COMMAND_WRITE_PROTECT  FLASH_COMMAND(0xC0)
 #define FLASH_INTEL_COMMAND_CONFIRM        FLASH_COMMAND(0xD0)
 #define FLASH_INTEL_COMMAND_WRITE_BUFFER   FLASH_COMMAND(0xE8)
@@ -171,4 +173,20 @@ int flash_geometry(volatile u16 *reg_addr_ctl) {
 	 */
 
 	return (addr & (block_size - 1));
+}
+
+u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
+	u32 flash_part_id;
+
+	volatile u16 *vendor_code = reg_addr_ctl;
+	volatile u16 *device_code = reg_addr_ctl + 1;
+
+	*vendor_code = FLASH_INTEL_COMMAND_PART_ID;
+	flash_nop(12);
+
+	flash_part_id = (*vendor_code << 16) | *device_code;
+
+	flash_reset(reg_addr_ctl);
+
+	return flash_part_id;
 }

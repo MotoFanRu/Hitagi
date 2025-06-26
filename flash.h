@@ -9,6 +9,7 @@ extern int flash_erase(volatile u16 *reg_addr_ctl);
 extern int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size);
 extern int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size);
 extern int flash_geometry(volatile u16 *reg_addr_ctl);
+extern u32 flash_get_part_id(volatile u16 *reg_addr_ctl);
 
 /**
  * Flash section.

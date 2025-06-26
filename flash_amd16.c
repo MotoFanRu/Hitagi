@@ -6,6 +6,9 @@
  * Documentation:
  *  S71WS-NX0.PDF
  *  https://forum.motofan.ru/index.php?act=Attach&type=post&id=280636
+ *
+ *  LLD_v5.13_to_Flash_Driver_an_01_e.fm.pdf
+ *  How to Use Spansion™ LLD v5.13 to Implement a Flash Driver
  */
 
 #define FLASH_AMD_START_PARAMETER_BLOCKS_1    ((volatile FLASH_DATA_WIDTH *) 0x10000000)
@@ -28,6 +31,7 @@
 #define FLASH_AMD_COMMAND_ERASE_CHIP       FLASH_COMMAND(0x10)
 #define FLASH_AMD_COMMAND_UNLOCK_1         FLASH_COMMAND(0xAA)
 #define FLASH_AMD_COMMAND_UNLOCK_2         FLASH_COMMAND(0x55)
+#define FLASH_AMD_COMMAND_PART_ID          FLASH_COMMAND(0x90)
 
 /**
  * Functions.
@@ -216,4 +220,23 @@ int flash_geometry(volatile u16 *reg_addr_ctl) {
 	 */
 
 	return (addr & (block_size - 1));
+}
+
+u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
+	u32 flash_part_id;
+
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
+	flash_nop(12);
+
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_PART_ID;
+	flash_nop(12);
+
+	flash_part_id  = (u32) (*(reg_addr_ctl + 0x0001) & 0x000000FF) << 16;
+	flash_part_id |= (u32) (*(reg_addr_ctl + 0x000E) & 0x000000FF) <<  8;
+	flash_part_id |= (u32) (*(reg_addr_ctl + 0x000F) & 0x000000FF) <<  0;
+
+	flash_reset(reg_addr_ctl);
+
+	return flash_part_id;
 }
