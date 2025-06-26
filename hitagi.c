@@ -31,6 +31,8 @@ static void hitagi_command_BIN(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_ERASE(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_READ(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQRC(const u8 *data_ptr, const u8 *buffer_next_byte);
+static void hitagi_command_RQHW(const u8 *data_ptr, const u8 *buffer_next_byte);
+static void hitagi_command_RQVN(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RESTART(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_POWER_DOWN(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_commands(const u8 *cmd, const u8 *data, const u8 *next);
@@ -54,6 +56,8 @@ static const u8 bin_str[]  = "BIN";
 static const u8 com_str[]  = ","  ;
 
 static const u8 rsrc_str[]  = "RSRC";
+static const u8 rshw_str[]  = "RSHW";
+static const u8 rsvn_str[]  = "RSVN";
 static const u8 read_str[]  = "READ";
 
 static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
@@ -62,6 +66,8 @@ static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
 	{ (const u8 *) "ERASE",      hitagi_command_ERASE       },
 	{ (const u8 *) "READ",       hitagi_command_READ        },
 	{ (const u8 *) "RQRC",       hitagi_command_RQRC        },
+	{ (const u8 *) "RQHW",       hitagi_command_RQHW        },
+	{ (const u8 *) "RQVN",       hitagi_command_RQVN        },
 	{ (const u8 *) "RESTART",    hitagi_command_RESTART     },
 	{ (const u8 *) "POWER_DOWN", hitagi_command_POWER_DOWN  },
 };
@@ -488,6 +494,53 @@ static void hitagi_command_RQRC(const u8 *data_ptr, const u8 *buffer_next_byte) 
 	util_u16_to_hexasc(csum, response_ptr);
 
 	hitagi_send_packet(rsrc_str, response);
+}
+
+static void hitagi_command_RQHW(const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u8 i;
+	u8 *response_ptr;
+	u16 bootloader_version;
+	u8 response[MAX_READ_RESPONSE_SIZE];
+
+	UNUSED(data_ptr);
+	UNUSED(buffer_next_byte);
+
+	for (i = 0; i < 8 * 2; ++i) {
+		response[i] = 0x30;
+	}
+
+	response_ptr = &response[12];
+	bootloader_version = *(FLASH_START_ADDRESS + 0x07); /* 0x0E offset (0x0E / 2) bootloader version on 0x1000000E. */
+
+	util_u16_to_hexasc(bootloader_version, response_ptr);
+
+	hitagi_send_packet(rshw_str, response);
+}
+
+static void hitagi_command_RQVN(const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u8 i;
+	u8 *response_ptr;
+	u16 bootloader_version;
+	u8 response[MAX_READ_RESPONSE_SIZE];
+
+	UNUSED(data_ptr);
+	UNUSED(buffer_next_byte);
+
+	for (i = 0; i < ((8 * 2) * 2) + 1; ++i) {
+		response[i] = 0x30;
+	}
+
+	bootloader_version = *(FLASH_START_ADDRESS + 0x07); /* 0x0E offset (0x0E / 2) bootloader version on 0x1000000E. */
+
+	response_ptr = &response[12];
+	util_u16_to_hexasc(bootloader_version, response_ptr);
+	response[16] = *com_str;
+
+	/* Repeat bootloader version again. */
+	response_ptr = &response[29];
+	util_u16_to_hexasc(bootloader_version, response_ptr);
+
+	hitagi_send_packet(rsvn_str, response);
 }
 
 static void hitagi_command_RESTART(const u8 *data_ptr, const u8 *buffer_next_byte) {
