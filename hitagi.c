@@ -33,6 +33,7 @@ static void hitagi_command_READ(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQRC(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQHW(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQVN(const u8 *data_ptr, const u8 *buffer_next_byte);
+static void hitagi_command_RQSW(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RESTART(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_POWER_DOWN(const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_commands(const u8 *cmd, const u8 *data, const u8 *next);
@@ -54,10 +55,12 @@ static const u8 ack_str[]  = "ACK";
 static const u8 err_str[]  = "ERR";
 static const u8 bin_str[]  = "BIN";
 static const u8 com_str[]  = ","  ;
+static const u8 scm_str[]  = ":"  ;
 
 static const u8 rsrc_str[]  = "RSRC";
 static const u8 rshw_str[]  = "RSHW";
 static const u8 rsvn_str[]  = "RSVN";
+static const u8 rssw_str[]  = "RSSW";
 static const u8 read_str[]  = "READ";
 
 static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
@@ -68,6 +71,7 @@ static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
 	{ (const u8 *) "RQRC",       hitagi_command_RQRC        },
 	{ (const u8 *) "RQHW",       hitagi_command_RQHW        },
 	{ (const u8 *) "RQVN",       hitagi_command_RQVN        },
+	{ (const u8 *) "RQSW",       hitagi_command_RQSW        },
 	{ (const u8 *) "RESTART",    hitagi_command_RESTART     },
 	{ (const u8 *) "POWER_DOWN", hitagi_command_POWER_DOWN  },
 };
@@ -541,6 +545,23 @@ static void hitagi_command_RQVN(const u8 *data_ptr, const u8 *buffer_next_byte) 
 	util_u16_to_hexasc(bootloader_version, response_ptr);
 
 	hitagi_send_packet(rsvn_str, response);
+}
+
+static void hitagi_command_RQSW(const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u8 *response_ptr;
+	u8 response[MAX_READ_RESPONSE_SIZE];
+
+	UNUSED(data_ptr);
+	UNUSED(buffer_next_byte);
+
+	response_ptr = &response[0];
+	util_string_copy(response_ptr, (const u8 *) "Hitagi SW v1.0");
+	response_ptr = &response[14];
+	util_string_copy(response_ptr, scm_str); /* ":" is separator there. */
+	response_ptr = &response[15];
+	util_string_copy(response_ptr, (const u8 *) "Hitagi FLEX v1.0");
+
+	hitagi_send_packet(rssw_str, response);
 }
 
 static void hitagi_command_RESTART(const u8 *data_ptr, const u8 *buffer_next_byte) {
