@@ -34,6 +34,7 @@ static void hitagi_command_RQRC(const u8 *answer_str, const u8 *data_ptr, const 
 static void hitagi_command_RQHW(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQVN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQSW(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
+static void hitagi_command_RQSN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RESTART(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_POWER_DOWN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_commands(const u8 *cmd, const u8 *data, const u8 *next);
@@ -66,6 +67,7 @@ static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
 	{ (const u8 *) "RQHW",       (const u8 *) "RSHW",       hitagi_command_RQHW        },
 	{ (const u8 *) "RQVN",       (const u8 *) "RSVN",       hitagi_command_RQVN        },
 	{ (const u8 *) "RQSW",       (const u8 *) "RSSW",       hitagi_command_RQSW        },
+	{ (const u8 *) "RQSN",       (const u8 *) "RSSN",       hitagi_command_RQSN        },
 	{ (const u8 *) "RESTART",    (const u8 *) NULL,         hitagi_command_RESTART     },
 	{ (const u8 *) "POWER_DOWN", (const u8 *) NULL,         hitagi_command_POWER_DOWN  },
 };
@@ -558,6 +560,27 @@ static void hitagi_command_RQSW(const u8 *answer_str, const u8 *data_ptr, const 
 	util_string_copy(response_ptr, scm_str); /* ":" is separator there. */
 	response_ptr = &response[15];
 	util_string_copy(response_ptr, (const u8 *) "Hitagi FLEX v1.0");
+
+	hitagi_send_packet(answer_str, response);
+}
+
+static void hitagi_command_RQSN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u8 *response_ptr;
+	u8 response[MAX_READ_RESPONSE_SIZE];
+
+	volatile u16 *i;
+	volatile u16 *start = NEPTUNE_UID_REG_ADDR;
+	volatile u16 *end = (NEPTUNE_REV_REG_ADDR - 1);
+
+	response_ptr = &response[0];
+
+	UNUSED(data_ptr);
+	UNUSED(buffer_next_byte);
+
+	for (i = end; i >= start; --i) {
+		util_u16_to_hexasc(*i, response_ptr);
+		response_ptr += 4;
+	}
 
 	hitagi_send_packet(answer_str, response);
 }

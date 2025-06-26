@@ -213,4 +213,63 @@
 
 #define USB_DATA_ARRAY_SIZE (32)
 
+/**
+ * UID Section.
+ */
+
+/*
+ * NEPTUNE_UID_REG: Unique Identifier Register, $2485_0000...$2485_0010, 16-bit.
+ *
+ * The Unique Identifier Register (UID) contains a 128-bit read-only field.
+ * Each part is programmed with a unique security identification code during the manufacturing process.
+ * Programming is done with laser fuses. Bits 127-124 are used as security module enables.
+ * These signals are readable so that the software can determine the chip configuration.
+ *
+ * Note: These bits are read 1 when the associated module is enabled (ie the associated fuse is blown).
+ * Bits 115-112 are used to indicate the usage of the chip to the software.
+ *
+ * Bits:
+ *   UID[127]: iim_hacc_en (1 = enabled, fuse blown).
+ *   UID[126]: iim_msu_en  (1 = enabled, fuse blown).
+ *   UID[125]: iim_srom_en (1 = enabled, fuse blown). Reserved. Not used in Neptune LTE.
+ *   UID[124]: iim_scc_en  (1 = enabled, fuse blown).
+ *
+ *   UID[115:112]:
+ *     0001: Development Part (SE Neptune LTE).
+ *     0010: Production Part (S Neptune LTE).
+ *     1000: Non-Secure Part (NS Neptune LTE).
+ */
+
+#define NEPTUNE_UID_REG_ADDR ((volatile u16 *) 0x24850000)
+
+/*
+ * NEPTUNE_REV_REG: Hardware Revision Register, $2485_0010, 16-bit.
+ *
+ * Bits:
+ *
+ *   PR[4:0]: Bits 15-11. Product Revision. Specifies the Neptune product type (ROM, RAM, Production RAM, etc.).
+ *     00000: Reserved.
+ *     10001: Neptune LTS ROM.
+ *     10010: Neptune LTE ROM.
+ *     10011: Neptune ULS ROM.
+ *     10100: Neptune LTE2 ROM.
+ *     10101: Neptune LTE2 IROM0400 ROM (not sure).
+ *     10111: Neptune LTE2 IROM0400 ROM (not sure).
+ *
+ *   PVT[2:0]: Bits 10-8. Product Vendor / Technology. Specifies the Neptune vendor and silicon technology
+ *             (SPS HIP6W, SPS HIP7, SPS HIP8 etc.)
+ *     000: Unknown.
+ *     001: Unknown.
+ *     010: SPS Hip7.
+ *     011: SPS Hip8.
+ *
+ *   SR[7:0]: Bits 7-0. SIlicon Revision. Increments with each silicon change.
+ *
+ *     0000_0000: Initial Revision (Pass 1).
+ *     0000_0001: Pass 2.
+ *     ...
+ */
+
+#define NEPTUNE_REV_REG_ADDR ((volatile u16 *) 0x24850010)
+
 #endif /* !REG_NEPTUNE_H */
