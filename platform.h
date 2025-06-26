@@ -67,10 +67,11 @@ typedef unsigned long long             u64;
 #define CMD_16_SIZE                    (4)
 #define CMD_8_SIZE                     (2)
 
-typedef void (*HITAGI_CMD_HANDLER_T) (const u8 *data, const u8 *next);
+typedef void (*HITAGI_CMD_HANDLER_T) (const u8 *answer_str, const u8 *data, const u8 *next);
 
 typedef struct {
 	const u8 *cmd;
+	const u8 *answer_str;
 	HITAGI_CMD_HANDLER_T cmd_func;
 } HITAGI_CMD_TABLE_T;
 
