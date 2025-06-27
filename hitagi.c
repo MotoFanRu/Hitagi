@@ -93,6 +93,13 @@ HITAGI_CMDLET_ERASE_T erase_cmdlet;
  * Util functions.
  */
 
+void nop(u32 nop_count) {
+	u32 i;
+	for (i = 0; i < nop_count; ++i) {
+		asm volatile ("nop");
+	}
+}
+
 static void util_u16_to_hexasc(u16 val, u8 *str) {
 	u8 i;
 	u8 digit;

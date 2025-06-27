@@ -27,7 +27,6 @@
  * Functions.
  */
 
-static void flash_nop(u8 nop_count);
 static void flash_wait(volatile u16 *reg_addr_ctl);
 static void flash_reset(volatile u16 *reg_addr_ctl);
 
@@ -43,43 +42,36 @@ int flash_init(void) {
 	return RESULT_OK;
 }
 
-static void flash_nop(u8 nop_count) {
-	u8 i;
-	for (i = 0; i < nop_count; ++i) {
-		asm volatile ("nop");
-	}
-}
-
 static void flash_wait(volatile u16 *reg_addr_ctl) {
 	while ((*reg_addr_ctl & FLASH_INTEL_STATUS_READY) != FLASH_INTEL_STATUS_READY) {
-		flash_nop(8);
+		nop(8);
 	}
 }
 
 static void flash_reset(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_CLEAR;
-	flash_nop(12);
+	nop(12);
 
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_READ;
-	flash_nop(12);
+	nop(12);
 }
 
 int flash_unlock(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_LOCK;
-	flash_nop(12);
+	nop(12);
 
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_CONFIRM;
-	flash_nop(12);
+	nop(12);
 
 	return RESULT_OK;
 }
 
 int flash_erase(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_ERASE;
-	flash_nop(12);
+	nop(12);
 
 	*reg_addr_ctl = FLASH_INTEL_COMMAND_CONFIRM;
-	flash_nop(12);
+	nop(12);
 
 	flash_wait(reg_addr_ctl);
 
@@ -96,10 +88,10 @@ int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size
 		if (word != 0xFFFF) {
 			/* Write word seq. */
 			*dst = FLASH_INTEL_COMMAND_WRITE;
-			flash_nop(12);
+			nop(12);
 
 			*dst = word;
-			flash_nop(12);
+			nop(12);
 
 			/* Wait Loops. */
 			flash_wait(dst);
@@ -182,7 +174,7 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 	volatile u16 *device_code = reg_addr_ctl + 1;
 
 	*vendor_code = FLASH_INTEL_COMMAND_PART_ID;
-	flash_nop(12);
+	nop(12);
 
 	flash_part_id = (*vendor_code << 16) | *device_code;
 

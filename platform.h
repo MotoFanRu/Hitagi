@@ -90,4 +90,6 @@ extern HITAGI_CMDLET_ERASE_T erase_cmdlet;
 
 extern int watchdog_service(void);
 
+extern void nop(u32 nop_count);
+
 #endif /* !PLATFORM_H */

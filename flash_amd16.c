@@ -37,7 +37,6 @@
  * Functions.
  */
 
-static void flash_nop(u8 nop_count);
 static int flash_wait(volatile u16 *reg_addr_ctl, const u16 data);
 static void flash_reset(volatile u16 *reg_addr_ctl);
 
@@ -53,13 +52,6 @@ int flash_init(void) {
 	return RESULT_OK;
 }
 
-static void flash_nop(u8 nop_count) {
-	u8 i;
-	for (i = 0; i < nop_count; ++i) {
-		asm volatile ("nop");
-	}
-}
-
 static int flash_wait(volatile u16 *reg_addr_ctl, const u16 data) {
 	u16 word = *reg_addr_ctl;
 
@@ -69,21 +61,20 @@ static int flash_wait(volatile u16 *reg_addr_ctl, const u16 data) {
 	}
 
 	word = *reg_addr_ctl;
-
-	flash_nop(12);
+	nop(12);
 
 	return (word != data) ? word : RESULT_OK;
 }
 
 static void flash_reset(volatile u16 *reg_addr_ctl) {
 	*reg_addr_ctl = FLASH_AMD_COMMAND_READ;
-	flash_nop(12);
+	nop(12);
 }
 
 int flash_unlock(volatile u16 *reg_addr_ctl) {
 	UNUSED(reg_addr_ctl);
 
-	flash_nop(12);
+	nop(12);
 
 	return RESULT_OK;
 }
@@ -130,8 +121,8 @@ int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size
 			*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
 
 			*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_SETUP_WRITE;
+			nop(12);
 
-			flash_nop(12);
 			*dst = word;
 
 			/* Wait Loops. */
@@ -181,7 +172,8 @@ int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) 
 		}
 
 		*dst = FLASH_AMD_COMMAND_CONFIRM;
-		flash_nop(16);
+		nop(16);
+
 		watchdog_service();
 
 #if 0
@@ -227,10 +219,10 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 
 	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
 	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
-	flash_nop(12);
+	nop(12);
 
 	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_PART_ID;
-	flash_nop(12);
+	nop(12);
 
 	flash_part_id  = (u32) (*(reg_addr_ctl + 0x0001) & 0x000000FF) << 16;
 	flash_part_id |= (u32) (*(reg_addr_ctl + 0x000E) & 0x000000FF) <<  8;
