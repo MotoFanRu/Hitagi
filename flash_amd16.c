@@ -217,6 +217,8 @@ int flash_geometry(volatile u16 *reg_addr_ctl) {
 u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 	u32 flash_part_id;
 
+	flash_part_id = 0;
+
 	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
 	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
 	nop(12);

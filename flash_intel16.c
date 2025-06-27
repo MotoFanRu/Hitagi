@@ -170,6 +170,8 @@ int flash_geometry(volatile u16 *reg_addr_ctl) {
 u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 	u32 flash_part_id;
 
+	flash_part_id = 0;
+
 	volatile u16 *vendor_code = reg_addr_ctl;
 	volatile u16 *device_code = reg_addr_ctl + 1;
 
