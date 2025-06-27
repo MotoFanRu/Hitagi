@@ -626,6 +626,11 @@ static void hitagi_command_RESTART(const u8 *answer_str, const u8 *data_ptr, con
 	UNUSED(data_ptr);
 	UNUSED(buffer_next_byte);
 
+	hitagi_send_ack(NULL);
+
+	/* Is 1M of NOPs enough? */
+	nop(1024 * 1024);
+
 	watchdog_reboot();
 }
 
@@ -633,6 +638,11 @@ static void hitagi_command_POWER_DOWN(const u8 *answer_str, const u8 *data_ptr, 
 	UNUSED(answer_str);
 	UNUSED(data_ptr);
 	UNUSED(buffer_next_byte);
+
+	hitagi_send_ack(NULL);
+
+	/* Is 1M of NOPs enough? */
+	nop(1024 * 1024);
 
 	watchdog_shutdown();
 }
