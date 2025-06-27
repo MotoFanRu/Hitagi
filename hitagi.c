@@ -10,6 +10,7 @@
  * Functions.
  */
 
+static void util_u8_to_hexasc(u8 val, u8 *str);
 static void util_u16_to_hexasc(u16 val, u8 *str);
 static void util_u32_to_hexasc(u32 val, u8 *str);
 static u32 util_hexasc_to_u32(const u8 *str, u8 size);
@@ -37,6 +38,7 @@ static void hitagi_command_RQVN(const u8 *answer_str, const u8 *data_ptr, const 
 static void hitagi_command_RQSW(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQSN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQFI(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
+static void hitagi_command_READ_OTP(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RESTART(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_POWER_DOWN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_commands(const u8 *cmd, const u8 *data, const u8 *next);
@@ -71,6 +73,7 @@ static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
 	{ (const u8 *) "RQSW",       (const u8 *) "RSSW",       hitagi_command_RQSW        },
 	{ (const u8 *) "RQSN",       (const u8 *) "RSSN",       hitagi_command_RQSN        },
 	{ (const u8 *) "RQFI",       (const u8 *) "RSFI",       hitagi_command_RQFI        },
+	{ (const u8 *) "READ_OTP",   (const u8 *) "READ_OTP",   hitagi_command_READ_OTP    },
 	{ (const u8 *) "RESTART",    (const u8 *) NULL,         hitagi_command_RESTART     },
 	{ (const u8 *) "POWER_DOWN", (const u8 *) NULL,         hitagi_command_POWER_DOWN  },
 };
@@ -90,7 +93,7 @@ static u8 tx_data[USB_MAX_TX_DATA_SIZE];
 HITAGI_CMDLET_ERASE_T erase_cmdlet;
 
 /**
- * Util functions.
+ * NOP function.
  */
 
 void nop(u32 nop_count) {
@@ -98,6 +101,23 @@ void nop(u32 nop_count) {
 	for (i = 0; i < nop_count; ++i) {
 		asm volatile ("nop");
 	}
+}
+
+/**
+ * Util functions.
+ */
+
+static void util_u8_to_hexasc(u8 val, u8 *str) {
+	u8 i;
+	u8 digit;
+
+	for (i = 0; i < 2; ++i) {
+		digit = (val >> 4) & 0x0F;
+		val <<= 4;
+		*str++ = (digit > 9) ? (digit + '7') : (digit + '0');
+	}
+
+	*str = NUL;
 }
 
 static void util_u16_to_hexasc(u16 val, u8 *str) {
@@ -617,6 +637,28 @@ static void hitagi_command_RQFI(const u8 *answer_str, const u8 *data_ptr, const 
 
 	flash_part_id = flash_get_part_id(FLASH_START_ADDRESS);
 	util_u32_to_hexasc(flash_part_id, response);
+
+	hitagi_send_packet(answer_str, response);
+}
+
+static void hitagi_command_READ_OTP(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u16 i;
+	u16 size;
+	u8 otp_reg_buffer[FLASH_MAX_OTP_SIZE];
+	u8 *response_ptr;
+	u8 response[MAX_READ_RESPONSE_SIZE];
+
+	UNUSED(data_ptr);
+	UNUSED(buffer_next_byte);
+
+	response_ptr = &response[0];
+
+	flash_get_otp_zone(FLASH_START_ADDRESS, otp_reg_buffer, &size);
+
+	for (i = 0; i < size; ++i) {
+		util_u8_to_hexasc(otp_reg_buffer[i], response_ptr);
+		response_ptr += 2;
+	}
 
 	hitagi_send_packet(answer_str, response);
 }

@@ -234,3 +234,11 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 
 	return flash_part_id;
 }
+
+int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size) {
+	UNUSED(reg_addr_ctl);
+	UNUSED(otp_out_buffer);
+	UNUSED(size);
+
+	return RESULT_OK;
+}

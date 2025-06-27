@@ -23,6 +23,12 @@
 #define FLASH_INTEL_COMMAND_WRITE_BUFFER   FLASH_COMMAND(0xE8)
 #define FLASH_INTEL_COMMAND_READ           FLASH_COMMAND(0xFF)
 
+#define FLASH_INTEL_PR_LOCK_REG0           (0x80)
+#define FLASH_INTEL_PR_LOCK_REG1           (0x89)
+
+#define FLASH_INTEL_PR__64BIT_SIZE_16BIT   (( 64 >> 3) >> (sizeof(u16) >> 1))
+#define FLASH_INTEL_PR_128BIT_SIZE_16BIT   ((128 >> 3) >> (sizeof(u16) >> 1))
+
 /**
  * Functions.
  */
@@ -183,4 +189,78 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 	flash_reset(reg_addr_ctl);
 
 	return flash_part_id;
+}
+
+/*
+ * Intel Numonyx™ StrataFlash® Wireless Memory (L30) 28F128L30, 28F256L30
+ *
+ * OTP space:
+ *   64   (8 bytes):   unique factory device identifier bits.
+ *   64   (8 bytes):   user-programmable OTP bits.
+ *   2048 (256 bytes): additional user-programmable OTP bits.
+ */
+
+int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size) {
+	u16 i;
+	u16 factory_reg[4];
+	u16 user_reg[4];
+	u16 user_add_reg[128];
+
+	volatile u16 *flash = reg_addr_ctl;
+	volatile u16 *factory_reg_ptr = &factory_reg[0];
+	volatile u16 *user_reg_ptr = &user_reg[0];
+	volatile u16 *user_add_reg_ptr = &user_add_reg[0];
+
+	*size = 8 + 8 + 256;
+
+	flash += FLASH_INTEL_PR_LOCK_REG0;
+	flash++;
+
+	for (i = 0; i < FLASH_INTEL_PR__64BIT_SIZE_16BIT; ++i, ++flash) {
+		*flash = FLASH_INTEL_COMMAND_PART_ID;
+		nop(12);
+
+		*(factory_reg_ptr + i) = *flash;
+		*(user_reg_ptr + i)    = *(flash + FLASH_INTEL_PR__64BIT_SIZE_16BIT);
+
+		watchdog_service();
+
+		flash_reset(flash);
+	}
+
+	flash = reg_addr_ctl;
+	flash += FLASH_INTEL_PR_LOCK_REG1;
+	flash++;
+	flash += (FLASH_INTEL_PR_128BIT_SIZE_16BIT * (1 - 1));
+
+	for (i = 0; i < FLASH_INTEL_PR_128BIT_SIZE_16BIT * 16; ++i, ++flash) {
+		*flash = FLASH_INTEL_COMMAND_PART_ID;
+		nop(12);
+
+		*(user_add_reg_ptr + i) = *flash;
+
+		watchdog_service();
+
+		flash_reset(flash);
+	}
+
+	flash_reset(flash--);
+
+	volatile u8 *factory_reg_ptr_u8 = (volatile u8 *) factory_reg_ptr;
+	volatile u8 *user_reg_ptr_u8 = (volatile u8 *) user_reg_ptr;
+	volatile u8 *user_add_reg_ptr_u8 = (volatile u8 *) user_add_reg_ptr;
+
+	for (i = 0; i < 8; ++i) {
+		otp_out_buffer[i] = factory_reg_ptr_u8[i];
+	}
+
+	for (i = 0; i < 8; ++i) {
+		otp_out_buffer[8+i] = user_reg_ptr_u8[i];
+	}
+
+	for (i = 0; i < 256; ++i) {
+		otp_out_buffer[16+i] = user_add_reg_ptr_u8[i];
+	}
+
+	return RESULT_OK;
 }

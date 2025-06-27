@@ -3,6 +3,10 @@
 
 #include "platform.h"
 
+/**
+ * General flash functions.
+ */
+
 extern int flash_init(void);
 extern int flash_unlock(volatile u16 *reg_addr_ctl);
 extern int flash_erase(volatile u16 *reg_addr_ctl);
@@ -10,6 +14,7 @@ extern int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u
 extern int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size);
 extern int flash_geometry(volatile u16 *reg_addr_ctl);
 extern u32 flash_get_part_id(volatile u16 *reg_addr_ctl);
+extern int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size);
 
 /**
  * Flash section.
@@ -30,5 +35,7 @@ extern u32 flash_get_part_id(volatile u16 *reg_addr_ctl);
 #endif
 
 #define FLASH_START_ADDRESS            ((volatile FLASH_DATA_WIDTH *) 0x10000000)
+
+#define FLASH_MAX_OTP_SIZE             (1024)
 
 #endif /* !FLASH_H */
