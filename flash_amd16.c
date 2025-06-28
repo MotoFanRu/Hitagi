@@ -238,7 +238,7 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 
 int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size) {
 	u16 i;
-	u16 otp_regs[8];
+	u16 otp_regs[64];
 
 	volatile u16 *flash = reg_addr_ctl;
 
@@ -249,7 +249,7 @@ int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size
 	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_READ_OTP;
 	nop(12);
 
-	*size = 16;
+	*size = 128;
 
 	flash += 0x80;
 
@@ -272,7 +272,7 @@ int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size
 
 	volatile u8 *otp_regs_ptr_u8 = (volatile u8 *) otp_regs;
 
-	for (i = 0; i < 16; ++i) {
+	for (i = 0; i < 128; ++i) {
 		otp_out_buffer[i] = otp_regs_ptr_u8[i];
 	}
 
