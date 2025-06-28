@@ -34,12 +34,15 @@
 #define FLASH_AMD_COMMAND_READ_OTP         FLASH_COMMAND(0x88)
 #define FLASH_AMD_COMMAND_PART_ID          FLASH_COMMAND(0x90)
 
+#define FLASH_AMD_PR_LOCK_REG0             (0x80)
+
 /**
  * Functions.
  */
 
 static int flash_wait(volatile u16 *reg_addr_ctl, const u16 data);
 static void flash_reset(volatile u16 *reg_addr_ctl);
+static int flash_write_buffer_16w_32b(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size);
 
 /**
  * Flash section for the AMD based flash chips.
@@ -143,56 +146,63 @@ int flash_write_block(volatile u16 *reg_addr_ctl, volatile u16 *buffer, u32 size
 	return RESULT_OK;
 }
 
-/* EXL, 25-Jun-2025: Looks like this one works only with 0x40 usb write buffer size in the Flash Terminal. */
-int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
-	u16 i;
-	u32 length;
-	u32 status;
-	u32 size_index;
-	volatile u16 *src = (volatile u16 *) buffer;
-	volatile u16 *dst = reg_addr_ctl;
+static int flash_write_buffer_16w_32b(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
+	u16 wcount;
+	u32 word_count = size / 2;
+	volatile u16 *current_offset = reg_addr_ctl;
+	volatile u16 *end_offset = reg_addr_ctl + word_count - 1;
+	volatile u16 *last_loaded_addr = reg_addr_ctl;
+	u16 write_data;
 
-	status = RESULT_OK;
-	size_index = size / 2;
+	write_data = 0;
 
-	do {
-		length = (size_index <= 32) ? size_index : 32;
+	if (!size) {
+		return RESULT_FAIL;
+	}
 
-		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
-		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
+	*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
+	*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
 
-		*dst = FLASH_AMD_COMMAND_SETUP_WRITE_BUF;
+	*current_offset = FLASH_AMD_COMMAND_SETUP_WRITE_BUF;
+	nop(12);
 
-		*dst = BUFFER_SIZE_TO_WRITE(length);
+	wcount = (u16) word_count - 1;
+	wcount *= 1;
 
-		for (i = 0; i < length; ++i) {
-			*dst = *src;
+	*reg_addr_ctl = wcount;
 
-			dst++;
-			src++;
-		}
+	while (current_offset <= end_offset) {
+		last_loaded_addr = current_offset;
 
-		*dst = FLASH_AMD_COMMAND_CONFIRM;
-		nop(16);
+		write_data = *buffer;
+
+		*current_offset++ = *buffer++;
 
 		watchdog_service();
+	}
 
-#if 0
-		/* Finalization. */
-		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
-		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
+	*last_loaded_addr = FLASH_AMD_COMMAND_CONFIRM;
+	nop(32);
 
-		*(FLASH_START_ADDRESS + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_RESET_WRITE_BUF;
-
-		flash_reset(reg_addr_ctl);
-#endif
-
-		size_index -= length;
-	} while (size_index > 0);
+	flash_wait(last_loaded_addr, write_data);
 
 	flash_reset(reg_addr_ctl);
 
-	return status;
+	return RESULT_OK;
+}
+
+int flash_write_buffer(volatile u16 *reg_addr_ctl, const u16 *buffer, u32 size) {
+	u16 i;
+	const u16 *src = buffer;
+	volatile u16 *dst = reg_addr_ctl;
+
+	for (i = 0; i < (size / 2) / 16; i++) {
+		flash_write_buffer_16w_32b(dst, src, 32);
+		src += 16;
+		dst += 16;
+	}
+
+	return RESULT_OK;
 }
 
 int flash_geometry(volatile u16 *reg_addr_ctl) {
@@ -251,7 +261,7 @@ int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size
 
 	*size = 128;
 
-	flash += 0x80;
+	flash += FLASH_AMD_PR_LOCK_REG0;
 
 	for (i = 0; i < 8; ++i, ++flash) {
 		otp_regs[i] = *flash;
