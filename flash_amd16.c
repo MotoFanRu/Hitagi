@@ -31,6 +31,7 @@
 #define FLASH_AMD_COMMAND_ERASE_CHIP       FLASH_COMMAND(0x10)
 #define FLASH_AMD_COMMAND_UNLOCK_1         FLASH_COMMAND(0xAA)
 #define FLASH_AMD_COMMAND_UNLOCK_2         FLASH_COMMAND(0x55)
+#define FLASH_AMD_COMMAND_READ_OTP         FLASH_COMMAND(0x88)
 #define FLASH_AMD_COMMAND_PART_ID          FLASH_COMMAND(0x90)
 
 /**
@@ -236,9 +237,44 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 }
 
 int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size) {
-	UNUSED(reg_addr_ctl);
-	UNUSED(otp_out_buffer);
-	UNUSED(size);
+	u16 i;
+	u16 otp_regs[8];
+
+	volatile u16 *flash = reg_addr_ctl;
+
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
+	nop(12);
+
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_READ_OTP;
+	nop(12);
+
+	*size = 16;
+
+	flash += 0x80;
+
+	for (i = 0; i < 8; ++i, ++flash) {
+		otp_regs[i] = *flash;
+
+		watchdog_service();
+	}
+
+	flash--;
+
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_UNLOCK_1;
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_2) = FLASH_AMD_COMMAND_UNLOCK_2;
+	nop(12);
+
+	*(reg_addr_ctl + FLASH_AMD_CMD_REGW_1) = FLASH_AMD_COMMAND_PART_ID;
+	nop(12);
+
+	flash_reset(reg_addr_ctl);
+
+	volatile u8 *otp_regs_ptr_u8 = (volatile u8 *) otp_regs;
+
+	for (i = 0; i < 16; ++i) {
+		otp_out_buffer[i] = otp_regs_ptr_u8[i];
+	}
 
 	return RESULT_OK;
 }

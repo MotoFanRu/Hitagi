@@ -6,6 +6,9 @@
  * Documentation:
  *  StrataFlash_Wireless_Memory_(L30).pdf
  *  https://firmware.center/firmware/Motorola/E398%20%28Polo%29/Service%20Docs/Data%20Sheets/U700_Numonyx_StrataFlash_Wireless_Memory_%28L30%29.pdf
+ *
+ *  PF38F4050L0YBQ0_lz38f4060_numonyx.pdf
+ *  https://firmware.center/firmware/Motorola/E398%20%28Polo%29/Service%20Docs/Data%20Sheets/U700_PF38F4050L0YBQ0_lz38f4060_numonyx.pdf
  */
 
 #define FLASH_INTEL_START_PARAMETER_BLOCKS   ((volatile FLASH_DATA_WIDTH *) 0x10000000)
