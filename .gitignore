@@ -2,3 +2,5 @@
 *.obj
 *.elf
 *.ldr
+*.bin
+*.ld

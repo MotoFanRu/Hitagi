@@ -32,8 +32,8 @@ static void hitagi_command_ADDR(const u8 *answer_str, const u8 *data_ptr, const 
 static void hitagi_command_BIN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_ERASE(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_READ(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
-static void hitagi_command_RQRC(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQHW(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
+static void hitagi_command_RQRC(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQVN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQSW(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
 static void hitagi_command_RQSN(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte);
@@ -67,8 +67,9 @@ static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
 	{ (const u8 *) "BIN",        (const u8 *) NULL,         hitagi_command_BIN         },
 	{ (const u8 *) "ERASE",      (const u8 *) NULL,         hitagi_command_ERASE       },
 	{ (const u8 *) "READ",       (const u8 *) "READ",       hitagi_command_READ        },
-	{ (const u8 *) "RQRC",       (const u8 *) "RSRC",       hitagi_command_RQRC        },
 	{ (const u8 *) "RQHW",       (const u8 *) "RSHW",       hitagi_command_RQHW        },
+#if !defined(FTR_COMPACT)
+	{ (const u8 *) "RQRC",       (const u8 *) "RSRC",       hitagi_command_RQRC        },
 	{ (const u8 *) "RQVN",       (const u8 *) "RSVN",       hitagi_command_RQVN        },
 	{ (const u8 *) "RQSW",       (const u8 *) "RSSW",       hitagi_command_RQSW        },
 	{ (const u8 *) "RQSN",       (const u8 *) "RSSN",       hitagi_command_RQSN        },
@@ -76,6 +77,7 @@ static const HITAGI_CMD_TABLE_T cmd_tbl[] = {
 	{ (const u8 *) "READ_OTP",   (const u8 *) "READ_OTP",   hitagi_command_READ_OTP    },
 	{ (const u8 *) "RESTART",    (const u8 *) NULL,         hitagi_command_RESTART     },
 	{ (const u8 *) "POWER_DOWN", (const u8 *) NULL,         hitagi_command_POWER_DOWN  },
+#endif
 };
 
 /**
@@ -87,8 +89,13 @@ static u16  received_packet_size;
 
 static u8 rx_command[MAX_COMMAND_STR_SIZE];
 
+#if !defined(FTR_COMPACT)
 static u8 rx_data[USB_MAX_RX_DATA_SIZE];
 static u8 tx_data[USB_MAX_TX_DATA_SIZE];
+#else
+static u8 *rx_data = (u8 *) 0x03FD0000 + 0x10000;
+static u8 *tx_data = (u8 *) 0x03FD0000 + 0x10000 + USB_MAX_RX_DATA_SIZE;
+#endif
 
 HITAGI_CMDLET_ERASE_T erase_cmdlet;
 
@@ -507,42 +514,6 @@ static void hitagi_command_READ(const u8 *answer_str, const u8 *data_ptr, const 
 	hitagi_send_bin_packet(answer_str, response, size + 2 + 1);
 }
 
-static void hitagi_command_RQRC(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte) {
-	u16 csum;
-	u8 *data_start_ptr;
-	u8 *data_end_ptr;
-	u8 *response_ptr;
-	u8 response[MAX_RESP_DATA_SIZE];
-	u32 start_addr;
-	u32 end_addr;
-
-	UNUSED(buffer_next_byte);
-
-	csum = 0;
-	response_ptr = &response[0];
-
-	start_addr = util_hexasc_to_u32(&data_ptr[0], CMD_32_SIZE);
-	end_addr = util_hexasc_to_u32(&data_ptr[CMD_32_SIZE + 1], CMD_32_SIZE);
-
-	data_start_ptr = (u8 *) start_addr;
-	data_end_ptr = (u8 *) end_addr;
-
-	if ((end_addr - start_addr) < 1) {
-		hitagi_send_error(ERR_DATA_INVALID);
-		return;
-	}
-
-	while (data_start_ptr <= data_end_ptr) {
-		csum += *data_start_ptr;
-		data_start_ptr++;
-		watchdog_service();
-	}
-
-	util_u16_to_hexasc(csum, response_ptr);
-
-	hitagi_send_packet(answer_str, response);
-}
-
 static void hitagi_command_RQHW(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte) {
 	u8 i;
 	u8 *response_ptr;
@@ -586,6 +557,42 @@ static void hitagi_command_RQVN(const u8 *answer_str, const u8 *data_ptr, const 
 	/* Repeat bootloader version again. */
 	response_ptr = &response[29];
 	util_u16_to_hexasc(bootloader_version, response_ptr);
+
+	hitagi_send_packet(answer_str, response);
+}
+
+static void hitagi_command_RQRC(const u8 *answer_str, const u8 *data_ptr, const u8 *buffer_next_byte) {
+	u16 csum;
+	u8 *data_start_ptr;
+	u8 *data_end_ptr;
+	u8 *response_ptr;
+	u8 response[MAX_RESP_DATA_SIZE];
+	u32 start_addr;
+	u32 end_addr;
+
+	UNUSED(buffer_next_byte);
+
+	csum = 0;
+	response_ptr = &response[0];
+
+	start_addr = util_hexasc_to_u32(&data_ptr[0], CMD_32_SIZE);
+	end_addr = util_hexasc_to_u32(&data_ptr[CMD_32_SIZE + 1], CMD_32_SIZE);
+
+	data_start_ptr = (u8 *) start_addr;
+	data_end_ptr = (u8 *) end_addr;
+
+	if ((end_addr - start_addr) < 1) {
+		hitagi_send_error(ERR_DATA_INVALID);
+		return;
+	}
+
+	while (data_start_ptr <= data_end_ptr) {
+		csum += *data_start_ptr;
+		data_start_ptr++;
+		watchdog_service();
+	}
+
+	util_u16_to_hexasc(csum, response_ptr);
 
 	hitagi_send_packet(answer_str, response);
 }
