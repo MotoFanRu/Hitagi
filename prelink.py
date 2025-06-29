@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
-
-# Written using ChatGPT-4.1, GitHub Copilot
-# https://github.com/copilot
-# 29-Jun-2025
+#
+# About:
+#   Prelink script for Hitagi RAMDLD project.
+#   It generates proper linker script from template.
+#
+# Author:
+#   EXL, ChatGPT-4.1 (GitHub Copilot)
+#
+# License:
+#   MIT
+#
 
 import sys
 

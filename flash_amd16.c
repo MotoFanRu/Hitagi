@@ -1,7 +1,12 @@
-#include "flash.h"
-
-/**
- * AMD-like (AMD, Fujitsu, Spansion) flash chips with 16-bit width bus driver.
+/*
+ * About:
+ *   AMD-like (AMD, Fujitsu, Spansion) flash chips with 16-bit width bus driver.
+ *
+ * Author:
+ *   EXL
+ *
+ * License:
+ *   MIT
  *
  * Documentation:
  *  S71WS-NX0.PDF
@@ -9,7 +14,10 @@
  *
  *  LLD_v5.13_to_Flash_Driver_an_01_e.fm.pdf
  *  How to Use Spansion™ LLD v5.13 to Implement a Flash Driver
+ *  https://picture.iczhiku.com/resource/eetop/WhiESkYtDYSLQVBX.pdf
  */
+
+#include "flash.h"
 
 #define FLASH_AMD_START_PARAMETER_BLOCKS_1    ((volatile FLASH_DATA_WIDTH *) 0x10000000)
 #define FLASH_AMD_END_PARAMETER_BLOCKS_1      ((volatile FLASH_DATA_WIDTH *) 0x10020000)
@@ -245,6 +253,14 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 
 	return flash_part_id;
 }
+
+/*
+ * S71WS-Nx0 Based MCPs.
+ *
+ * OTP space, CFI Query:
+ *   52h 0007h Secured Silicon Sector (Customer OTP Area) Size 2^N bytes.
+ *   2^7 = 128 bytes, 1024 bits.
+ */
 
 int flash_get_otp_zone(volatile u16 *reg_addr_ctl, u8 *otp_out_buffer, u16 *size) {
 	u16 i;

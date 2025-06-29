@@ -1,11 +1,22 @@
-#ifndef REG_NEPTUNE_H
-#define REG_NEPTUNE_H
+/*
+ * About:
+ *   Motorola/Freescale Neptune LTE-like SoCs (various) register definitions.
+ *
+ * Author:
+ *   EXL, Motorola Inc.
+ *
+ * License:
+ *   MIT
+ *
+ * Documentation:
+ *  Neptune LTE IC Baseband Specification.pdf
+ *  https://firmware.center/firmware/Motorola/E398%20%28Polo%29/Service%20Docs/Data%20Sheets/U800_Neptune%20LTE%20IC%20Baseband%20Specification.pdf
+ */
+
+#ifndef REGS_NEPTUNE_H
+#define REGS_NEPTUNE_H
 
 #include "platform.h"
-
-/*
- * U800_Neptune LTE IC Baseband Specification.pdf
- */
 
 /**
  * Watchdog section.
@@ -272,4 +283,4 @@
 
 #define NEPTUNE_REV_REG_ADDR ((volatile u16 *) 0x24850010)
 
-#endif /* !REG_NEPTUNE_H */
+#endif /* !REGS_NEPTUNE_H */

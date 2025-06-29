@@ -1,3 +1,14 @@
+/*
+ * About:
+ *   General section for all platforms supported by Hitagi.
+ *
+ * Author:
+ *   EXL
+ *
+ * License:
+ *   MIT
+ */
+
 #ifndef PLATFORM_H
 #define PLATFORM_H
 

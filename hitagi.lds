@@ -3,11 +3,14 @@
  *   Template for the linker script for RAMDLDs for Motorola P2K phones on the various Neptune SoCs.
  *
  * Notes:
- *   %ORIGIN%: origin entry point address.
- *   %LENGTH%: memory chunk length size.
+ *   <ORIGIN>: Origin entry point address.
+ *   <LENGTH>: Memory chunk length size.
  *
  * Author:
- *   EXL, 29-Jun-2025
+ *   EXL, Motorola Inc.
+ *
+ * License:
+ *   MIT
  */
 
 MEMORY {

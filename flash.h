@@ -1,3 +1,14 @@
+/*
+ * About:
+ *   General section for the various memory Flash chips.
+ *
+ * Author:
+ *   EXL
+ *
+ * License:
+ *   MIT
+ */
+
 #ifndef FLASH_H
 #define FLASH_H
 

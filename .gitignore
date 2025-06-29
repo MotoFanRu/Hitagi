@@ -1,3 +1,14 @@
+#
+# About:
+#   Ignore all artifacts and intermediate generated files.
+#
+# Author:
+#   EXL
+#
+# License:
+#   MIT
+#
+
 *.o
 *.obj
 *.elf

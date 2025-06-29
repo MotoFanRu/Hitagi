@@ -1,7 +1,12 @@
-#include "flash.h"
-
-/**
- * Intel-like (Intel, ST, Numonyx, etc.) flash chips with 16-bit width bus driver.
+/*
+ * About:
+ *   Intel-like (Intel, ST, Numonyx, etc.) flash chips with 16-bit width bus driver.
+ *
+ * Author:
+ *   EXL
+ *
+ * License:
+ *   MIT
  *
  * Documentation:
  *  StrataFlash_Wireless_Memory_(L30).pdf
@@ -10,6 +15,8 @@
  *  PF38F4050L0YBQ0_lz38f4060_numonyx.pdf
  *  https://firmware.center/firmware/Motorola/E398%20%28Polo%29/Service%20Docs/Data%20Sheets/U700_PF38F4050L0YBQ0_lz38f4060_numonyx.pdf
  */
+
+#include "flash.h"
 
 #define FLASH_INTEL_START_PARAMETER_BLOCKS   ((volatile FLASH_DATA_WIDTH *) 0x10000000)
 #define FLASH_INTEL_END_PARAMETER_BLOCKS     ((volatile FLASH_DATA_WIDTH *) 0x10020000)
@@ -195,7 +202,7 @@ u32 flash_get_part_id(volatile u16 *reg_addr_ctl) {
 }
 
 /*
- * Intel Numonyx™ StrataFlash® Wireless Memory (L30) 28F128L30, 28F256L30
+ * Intel Numonyx™ StrataFlash® Wireless Memory (L30) 28F128L30, 28F256L30.
  *
  * OTP space:
  *   64   (8 bytes):   unique factory device identifier bits.

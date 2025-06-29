@@ -1,3 +1,49 @@
+/*
+ * About:
+ *   Hitagi main module with Motorola Flash Protocol implementation.
+ *
+ * Author:
+ *   EXL, Motorola Inc.
+ *
+ * License:
+ *   MIT
+ *
+ * Commands:
+ *   ADDR        |.ADDR.10000000XX.       |  # Set address for BIN command, XX is checksum.
+ *   BIN         |.BIN.DATAXX.            |  # Upload binary to address (IRAM, RAM, Flash for flashing), XX is checksum.
+ *   ERASE       |.ERASE.                 |  # Activate read and write mode. See below for more details.
+ *   READ        |.READ.10000000,0200.    |  # Read data from address on size.
+ *   RQHW        |.RQHW.                  |  # Request hardware info data, bootloader version.
+ *   RQRC        |.RQRC.10000000,10000600.|  # Calculate checksum of addresses range.
+ *   RQVN        |.RQVN.                  |  # Request version info.
+ *   RQSW        |.RQSW.                  |  # Request S/W version.
+ *   RQSN        |.RQSN.                  |  # Request serial number of SoC.
+ *   RQFI        |.RQFI.                  |  # Request part ID from flash memory chip.
+ *   READ_OTP    |.READ_OTP.              |  # Read OTP registers data.
+ *   RESTART     |.RESTART.               |  # Restart or power down device.
+ *   POWER_DOWN  |.POWER_DOWN.            |  # Power off device.
+ *
+ * Notes:
+ *   1. Flash modes can be switched by calling the method that sets the `ERASE` flag a different number of times.
+ *
+ *      # 0. Read-only mode. No `ERASE` flag is set.
+ *
+ *      # 1. Read/Write word mode for the entire flash.
+ *      mfp_cmd(er, ew, 'ERASE')
+ *
+ *      # 2. Read/Write buffer mode for the entire flash.
+ *      mfp_cmd(er, ew, 'ERASE')
+ *      mfp_cmd(er, ew, 'ERASE')
+ *
+ *      # 3. Erase-only mode for the entire flash.
+ *      mfp_cmd(er, ew, 'ERASE')
+ *      mfp_cmd(er, ew, 'ERASE')
+ *      mfp_cmd(er, ew, 'ERASE')
+ *
+ *   2. It is better if the flashed chunk size is a multiple of `0x8000` (parameter blocks) or `0x20000` (main blocks)
+ *      for Intel-like and AMD-like flash chips.
+ */
+
 #include "platform.h"
 
 #if defined(FTR_NEPTUNE_LTE1) || defined(FTR_NEPTUNE_LTE2)

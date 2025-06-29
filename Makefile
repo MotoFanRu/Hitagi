@@ -1,7 +1,15 @@
-# Simple Makefile for ARM bare-metal project
-# Assumes: linker.ld, startup.c, main.c (add more .c files as needed)
+#
+# About:
+#   Makefile building script for Hitagi RAMDLD project.
+#
+# Author:
+#   EXL, ChatGPT-4.1 (GitHub Copilot)
+#
+# License:
+#   MIT
+#
 
-# Toolchain prefix (change if using a different toolchain)
+# Toolchain prefix (change if using a different toolchain).
 CROSS_COMPILE ?= arm-none-eabi-
 
 CC      := $(CROSS_COMPILE)gcc
@@ -10,7 +18,7 @@ OBJCOPY := $(CROSS_COMPILE)objcopy
 OBJDUMP := $(CROSS_COMPILE)objdump
 SIZE    := $(CROSS_COMPILE)size
 
-# Parameters
+# Parameters.
 FLASH_TYPE ?= intel16
 PLATFORM ?= LTE1
 
@@ -34,18 +42,18 @@ ORIGIN_LTE2C      = 0x03FC8014
 LENGTH_LTE2C      = 0x00037FEC
 SIGN_OFFSET_LTE2C = 0x00001800
 
-# Source and objects
+# Source and objects.
 SRCS  = hitagi.c
 SRCS += flash_$(FLASH_TYPE).c
 OBJS  = $(SRCS:.c=.o)
 
-# Output files
+# Output files.
 TARGET = hitagi
 ELF    = $(TARGET).elf
 BIN    = $(TARGET).bin
 LDR    = $(TARGET).ldr
 
-# Flags
+# Flags.
 CFLAGS       = $(DEFINES_$(PLATFORM))
 CFLAGS      += -Wall -Wextra -pedantic
 CFLAGS      += -nostdlib -nostdinc

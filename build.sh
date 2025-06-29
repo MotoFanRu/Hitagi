@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#
+# About:
+#   Building script for Hitagi RAMDLDs.
+#
+# Author:
+#   EXL
+#
+# License:
+#   MIT
+#
 
 rm -Rf *.ldr
 
