@@ -9,9 +9,9 @@
 #   MIT
 #
 
-*.o
-*.obj
-*.elf
-*.ldr
-*.bin
-*.ld
+/*.o
+/*.obj
+/*.elf
+/*.ldr
+/*.bin
+/*.ld
