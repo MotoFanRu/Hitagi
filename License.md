@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 1998-2010 Motorola Inc. 
+Copyright (c) 1998-2010 Motorola Inc.  
 Copyright (c) 2020-2025 EXL
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
