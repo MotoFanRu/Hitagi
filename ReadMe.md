@@ -1,32 +1,52 @@
 Hitagi
 ======
 
-Custom and open-source RAMDLD (Motorola Flash Protocol) implementation for Motorola phones.
+Open-source RAMDLD (RAM DownLoader) implementation of the Motorola Flash Protocol for Motorola phones.
+
+![Hitagi Logo + Screenshot](img/Hitagi_Logo_Screen_1.png)
 
 ## Build
 
 ```bash
 sudo apt install -y gcc-arm-none-eabi
 
-cd Hitagi
-make
+./build.sh
 
-make FLASH_TYPE=intel16
-make FLASH_TYPE=amd16
+# Alt.
+make PLATFORM=LTE1 FLASH_TYPE=intel16
+make PLATFORM=LTE2 FLASH_TYPE=intel16
+make PLATFORM=LTE1C FLASH_TYPE=intel16
+make PLATFORM=LTE2C FLASH_TYPE=intel16
+make PLATFORM=LTE1 FLASH_TYPE=amd16
 ```
 
 ## Run
 
-Please use the **Flash Terminal** utility: **[https://github.com/EXL/FlashTerminal](https://github.com/EXL/FlashTerminal)**
+Please use the **Flash Terminal** utility: **[https://github.com/EXL/FlashTerminal](https://github.com/EXL/FlashTerminal)** for uploading and running RAMDLDs.
 
 ```bash
-cd FlashTerminal
 sudo ./FlashTerminal.py -v -l
 ```
 
 ## Notes
 
-1. It is better if the flashed chunk size is a multiple of `0x8000` (parameter blocks) or `0x20000` (main blocks) for Intel-like and AMD-like flash chips.
+1. Command list of implemented Motorola Flash Protocol.
+
+   ```bash
+   ADDR        |.ADDR.10000000XX.       |  # Set address for BIN command, XX is checksum.
+   BIN         |.BIN.DATAXX.            |  # Upload binary to address (IRAM, RAM, Flash for flashing), XX is checksum.
+   ERASE       |.ERASE.                 |  # Activate read and write mode. See below for more details.
+   READ        |.READ.10000000,0200.    |  # Read data from address on size.
+   RQHW        |.RQHW.                  |  # Request hardware info data, bootloader version.
+   RQRC        |.RQRC.10000000,10000600.|  # Calculate checksum of addresses range.
+   RQVN        |.RQVN.                  |  # Request version info.
+   RQSW        |.RQSW.                  |  # Request S/W version.
+   RQSN        |.RQSN.                  |  # Request serial number of SoC.
+   RQFI        |.RQFI.                  |  # Request part ID from flash memory chip.
+   READ_OTP    |.READ_OTP.              |  # Read OTP registers data.
+   RESTART     |.RESTART.               |  # Restart or power down device.
+   POWER_DOWN  |.POWER_DOWN.            |  # Power off device.
+   ```
 
 2. Flash modes can be switched by calling the method that sets the `ERASE` flag a different number of times.
 
@@ -46,6 +66,8 @@ sudo ./FlashTerminal.py -v -l
    mfp_cmd(er, ew, 'ERASE')
    ```
 
+3. It is better if the flashed chunk size is a multiple of `0x8000` (parameter blocks) or `0x20000` (main blocks) for Intel-like and AMD-like flash chips.
+
 ## Credits & Thanks
 
 * **[@muromec](https://github.com/muromec)**
@@ -59,4 +81,4 @@ sudo ./FlashTerminal.py -v -l
 * MotoFan.Ru developers
 * Motorola developers and engineers
 * Intel and AMD engineers and other
-* DenK for testing Spansion memory chip flashing on Siemens CC75
+* DenK and ahsim for testing Spansion memory chip flashing on Siemens CC75
